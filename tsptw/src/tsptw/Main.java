@@ -3,6 +3,7 @@ package tsptw;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
@@ -35,11 +36,32 @@ public class Main {
 		    System.out.println(id);
 		}*/
 		
-		System.out.println("ok");
+		System.out.println(new Random().nextFloat());
 		
 		Graph graph = new Graph(vertices,edges);
 		
 		
+	}
+	public void processEdgeTravelTime(ArrayList<Vertice> vertices, ArrayList<Edge> edges) {
+		
+		for(Edge e : edges) {
+			
+			for(Vertice i : vertices) {
+
+				for(Vertice j : vertices) {
+					
+					for(Vertice k : vertices) {
+					
+					}
+				}
+			}
+			
+		}	
+	}
+	public double getTravelTime(int xa, int xb, int ya, int yb) {
+		int xt = xa - xb;
+		int yt = ya - yb;
+		return Math.floor(Math.sqrt(xt*xt + yt*yt));
 	}
 
 }
