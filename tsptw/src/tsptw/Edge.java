@@ -2,6 +2,7 @@ package tsptw;
 
 public class Edge {
 
+	//TODO: remove this unused class if it is not necessary
 	public int edgeId;
 	public Vertice source;
 	public Vertice destiny;

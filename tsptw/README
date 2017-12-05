@@ -1,0 +1,56 @@
+# Descrição das Instâncias do Travelling Salesman Problem with Time Windows:
+#
+#
+# Todas as instâncias do TSPTW começam com duas linhas de cabeçalho contendo 
+# informações básicas. A primeira linha contém o nome original da instância, e
+# a segunda linha contém o nome de cada coluna/campo das linhas abaixo dela.
+# As duas linhas do cabeçalho começam com o caracter '#'
+#
+# Abaixo um exemplo do cabeçalho das instâncias:
+
+#Instance: instancia_exemplo
+#CUST NO.   XCOORD.   YCOORD.    DEMAND   READY TIME   DUE DATE   SERVICE TIME
+
+# Após o cabeçalho, seguem N linhas, uma para cada vértice do grafo de entrada.
+# Cada linha possui 7 valores inteiros (um para cada coluna do cabeçalho),
+# contendo respectivamente:
+#	1) Identificador do vértice (1 a N);
+#	2) Coordenada X do vértice;
+#	3) Coordenada Y do vértice;
+#	4) Demanda do vértice (sempre 0, pode ser ignorada);
+#	5) O tempo de início da janela de tempo do vértice;
+#	6) O tempo de fim da janela de tempo do vértice;
+#	7) O tempo de serviço do vértice (sempre 0, pode ser ignorado).
+#
+# A última linha contém o ID=999 e todos os campos zerados. Ela não deve ser 
+# considerada um vértice.
+#
+# 
+# O tempo de viagem entre dois vértices é calculado através da distância 
+# euclidiana entre os vértices. Dados dois pontos A=(xa, ya) e B=(xb,yb), o
+# tempo tab pode ser calculado como (floor é a operação que obtém o menor 
+# valor inteiro a partir de um de ponto flutuante, i.e., trunca):
+#		xd = xa - xb;
+# 		yd = ya - yb;
+#  		tab = floor(sqrt( xd*xd + yd*yd));
+#
+# Note, porém, que a desigualdade triangular deve ser mantida e, através de 
+# truncamento isto não é garantido. Para tal, é preciso realizar um 
+# processamento após calcular as distâncias euclidianas. O processamento é feito
+# da seguinte forma, considerando que N é o número de vértices no problema,
+# e dist a matriz de distância/tempo com os valores euclidianos calculados. 
+# 	for (int i = 0 ; i < N ; i++)
+#		for (int j = 0 ; j < N ; j++)
+#			for (int k = 0 ; k < N ; k++)
+#				if (dist[i][j] > (dist[i][k] + dist[k][j]))
+#					dist[i][j] = dist[i][k] + dist[k][j];
+#
+# 
+# Caso este processamento não seja realizado, o resultado não poderá ser 
+# comparado diretamente com aqueles presentes na literatura científica, pois
+# não estará considerando o mesmo problema de entrada.
+#
+#
+
+
+

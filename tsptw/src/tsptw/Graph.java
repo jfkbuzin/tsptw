@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class Graph {
 
+	//TODO: remove this unused class if it is not necessary
 	public ArrayList<Vertice> vertices;
 	public ArrayList<Edge> edges;
 	
