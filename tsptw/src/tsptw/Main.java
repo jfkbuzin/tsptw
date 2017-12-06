@@ -3,6 +3,7 @@ package tsptw;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Main {
 
@@ -17,6 +18,7 @@ public class Main {
 		float r = 0;
 		int stop1 = 0;
 		int stop2 = 0;
+		long seed = 0;
 		
 		if (0 < args.length) {
 			file = new File(args[0]);
@@ -24,7 +26,8 @@ public class Main {
 			r = Float.parseFloat(args[2]); 
 			stop1 = Integer.parseInt(args[3]);
 			stop2 = Integer.parseInt(args[4]);
-			// file path, t,r,stop1 e stop2 digitadas pelo user
+			seed = Integer.parseInt(args[5]);
+			// file path, t,r,stop1,stop2 e seed digitadas pelo user
 		} else {
 			System.err.println("Invalid arguments count:" + args.length);
 			System.exit(0);
@@ -43,6 +46,7 @@ public class Main {
 		ArrayList<Vertice> vertices = ReadFile.readFile(file);
 		//ArrayList<Edge> edges =  new ArrayList<Edge>();
 		
+		//vertices = SimulatedAnnealing.simulatedAnnealing(vertices,temperature,r,stop1,stop2, seed);
 		
 		//System.out.println(new Random().nextFloat());
 		
@@ -52,6 +56,8 @@ public class Main {
 		System.out.println("r:" + r);
 		System.out.println("stop1:" + stop1);
 		System.out.println("stop2:" + stop2);
+		System.out.println("seed:" + seed);
+		
 		
 		Vertice v1 = vertices.get(0);
 		Vertice v2 = vertices.get(1);
