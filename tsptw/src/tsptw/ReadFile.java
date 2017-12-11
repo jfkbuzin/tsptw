@@ -24,6 +24,7 @@ public class ReadFile {
     		s.nextLine();
     		s.nextLine();
 
+    		boolean isOrigin = true;
     		
     		// Read each line, ensuring correct format.
     		while (s.hasNext())
@@ -36,8 +37,9 @@ public class ReadFile {
         		    int readyTime = s.nextInt(); 
         		    int dueDate =  s.nextInt(); 
         		    s.nextInt(); 
-        		    Vertice vertice = new Vertice(id,x,y,readyTime,dueDate);
+        		    Vertice vertice = new Vertice(id,x,y,readyTime,dueDate,isOrigin);
         		    vertices.add(vertice);
+        		    isOrigin = false;
     			}
     			else{
     				break;
@@ -49,7 +51,7 @@ public class ReadFile {
     		vertices.add(vertices.get(0));
     		
     		for(Vertice vertice : vertices){
-    			System.out.println(vertice.getVerticeId() + "_" + vertice.getxCoord() + "_" +  vertice.getyCoord() + "_" + 
+    			if(Main.debug)System.out.println(vertice.getVerticeId() + "_" + vertice.getxCoord() + "_" +  vertice.getyCoord() + "_" + 
     					vertice.getReadyTime() + "_" +  vertice.getDueDate());
 
     		}

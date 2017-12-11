@@ -2,89 +2,463 @@ package tsptw;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 public class SimulatedAnnealing {
-	//TODO: tudo que está aqui ainda nao foi testado
+	
+	public static int sucessRate = 0;
+	
 
-	public ArrayList<Vertice> simulatedAnnealing(ArrayList<Vertice> initialPath, float t, float r, int stop1, int stop2) {
+	public static ArrayList<Vertice> simulatedAnnealing(ArrayList<Vertice> initialPath, float t, float r, int stop1, int stop2, long seed) {
+		
+		ArrayList<Graph> testedPaths =  new ArrayList<>();
+		
+		Random rNeighbor1 = new Random(seed);
+		Random rNeighbor2 = new Random(seed*3);
+		Random randomSimulated = new Random(seed*3);
+		//System.out.println("r1: " + rNeighbor1.nextInt(vertices.size()-1));
+		//System.out.println("r2: " + rNeighbor1.nextInt(vertices.size()-1));
+		//System.out.println("r3: " + randomSimulated.nextFloat());
+		
+		//System.out.println("r1a: " + rNeighbor1.nextInt(vertices.size()-1));
+		//System.out.println("r2a: " + rNeighbor1.nextInt(vertices.size()-1));
+		//System.out.println("r3a: " + randomSimulated.nextFloat());
 		
 		//criterio de parada = numero de iteraçoes de stop1 e 2(?)
 		
 		ArrayList<Vertice> currentPath = initialPath;
-		double currentSolution = solution(currentPath);
-		//TODO: if current solution is invalid? change path until solution is found or change local search function?
+		
+		//currentPath = sortByReadyTime(currentPath);
+		currentPath = sortByDueDate(currentPath);
+		
+		System.out.println("Original Path:");
+		printPath(currentPath);
+		
+		//currentPath = findPossibleSolution(currentPath, Main.distMatrix);
+		
+		System.out.println("Possible Solution Path:");
+		printPath(currentPath);
+		
+		double currentSolution = isValidSolution(currentPath);
+		
+		
+		if(currentSolution == -1) {
+			System.out.println("Must find the first solution no matter what:");
+			return null;
+		}
+		
+		ArrayList<Vertice> firstSolutionPath = currentPath;
 		
 		while(stop2 > 0) {
 			while(stop1 > 0) {
 				
-				ArrayList<Vertice> candidatePath = neighbor(currentPath);
+				ArrayList<Vertice> candidatePath = neighbor(currentPath, rNeighbor1, rNeighbor2,testedPaths);
+
+				double candidateSolution = isValidSolution(candidatePath);
 				
-				double candidateSolution = solution(candidatePath);
+				if(Main.debug)System.out.println("Original Neighbor Path:");
+				if(Main.debug)printPath(candidatePath);
 				
-				//TODO: if candidate solution is invalid?
+				if(candidateSolution == -1){
+					//test 3-opt
+					candidateSolution = isValidSolution(candidatePath);
+				}
+				
+				//we have to go back
+				if(candidateSolution == -1){
+					candidatePath = firstSolutionPath;
+					candidateSolution = currentSolution;
+				}
+				
 				if(candidateSolution <= currentSolution) {
 					currentPath = candidatePath;
+					//distancePath = dCandidatePath;
 					currentSolution = candidateSolution;
 				}
 				else {
-					double delta = candidateSolution - currentSolution;
-					if(Math.exp(-delta/t) > new Random().nextFloat()) {
-						currentPath = candidatePath;
-						currentSolution = candidateSolution;
+					if(candidateSolution != 80000) {
+						double delta = candidateSolution - currentSolution;
+						if(Math.exp(-delta/t) > randomSimulated.nextFloat()) {
+							currentPath = candidatePath;
+							//distancePath = dCandidatePath;
+							currentSolution = candidateSolution;
+						}
 					}
 				}
 				
 				stop1--;
+				t = t * r;
 			}
 			t = t * r;
 			
 			stop2--;
 		}
 		
+		//System.out.println("All neighbors:");
+		//for(Graph g : testedPaths) {
+		//	printPath(g.getVertices());
+		//}
+		
 		System.out.println("Minimum time to travel all vertices found: " + currentSolution);
+		System.out.println("Seed used: " + seed);
+		System.out.println("Sucess rate: " + sucessRate);
+		System.out.println("Final Path:");
+		printPath(currentPath);
 		return currentPath;
+		
+	}
+
+	
+	public static ArrayList<Vertice> insertionHeuristic(ArrayList<Vertice> currentPath){
+		
+		ArrayList<Vertice> testPath = new ArrayList<Vertice>(currentPath);
+		testPath.remove(0);
+		//testPath.remove(testPath.size()-1);
+		Vertice origin = currentPath.get(0);
+		Vertice first = origin;
+		ArrayList<Vertice> solutionPath = new ArrayList<Vertice>();
+		solutionPath.add(origin);
+		double distance = 0;
+		double totalDistance = 0;
+		
+		solutionPath.add(origin);
+		
+		ArrayList<Edge> placesToInsertVertice = new ArrayList<Edge>();
+		
+		Vertice second = getVerticeMinDistance(first, testPath);
+		
+		solutionPath.add(second);
+		testPath.remove(second);
+		
+		Vertice middle = getVerticeMinDistance(first, testPath);
+		
+		double diu = calculateDistance(origin, middle, distance);
+		double duj = calculateDistance(middle, second, distance);
+		double dij = calculateDistance(origin, second, distance);
+		
+		if(diu < middle.getDueDate() & duj < second.getDueDate()){
+			solutionPath.remove(second);
+			solutionPath.add(middle);
+			solutionPath.add(second);
+			
+			testPath.remove(middle);
+		}
+		
+		for(Vertice o : testPath){
+			
+		}
+		
+		
+		solutionPath.add(origin);
+		
+		return solutionPath;
+		
 	}
 	
-	public ArrayList<Vertice> neighbor(ArrayList<Vertice> currentPath) {
+	
+	public static double c1(double diu,double duj, double dij){
+		return diu + duj + dij;
+	}
+	
+	
+	public static Vertice getVerticeMinDistance(Vertice first, ArrayList<Vertice> testPath){
+		
+		ArrayList<Edge> minDistanceEdges = new ArrayList<Edge>();
+
+		int index = 1;
+		for(Vertice second: testPath) {
+			double distance = calculateDistance(first, second, 0);
+			Edge e = new Edge(index, first, second, distance);
+			index++;
+			minDistanceEdges.add(e);
+		}
+		
+		Edge e = minDistanceEdges.stream().min((f, s) -> Double.compare(f.getTravelTime(), s.getTravelTime())).get();
+		
+		return e.getDestiny();
+	}
+	
+	public Vertice getVerticeMinTotalDistance(Vertice first, ArrayList<Vertice> testPath, double totalDistance){
+		
+		ArrayList<Edge> minDistanceEdges = new ArrayList<Edge>();
+
+		int index = 1;
+		for(Vertice second: testPath) {
+			double distance = calculateDistance(first, second, totalDistance);
+			Edge e = new Edge(index, first, second, distance);
+			index++;
+			minDistanceEdges.add(e);
+		}
+		
+		Edge e = minDistanceEdges.stream().min((f, s) -> Double.compare(f.getTravelTime(), s.getTravelTime())).get();
+		
+		return e.getDestiny();
+	}
+	
+	
+	
+	public static ArrayList<Vertice> findPossibleSolution(ArrayList<Vertice> currentPath, double[][] distMatrix) {
+		
+		ArrayList<Vertice> testPath = new ArrayList<Vertice>(currentPath);
+		testPath.remove(0);
+		testPath.remove(testPath.size()-1);
+		Vertice origin = currentPath.get(0);
+		Vertice first = origin;
+		ArrayList<Vertice> solutionPath = new ArrayList<Vertice>();
+		solutionPath.add(origin);
+		double totalDistance = 0;
+		
+		//loop principal
+		while(!testPath.isEmpty()) {
+			Vertice vMinDueDate = testPath.stream().min((f, s) -> Double.compare(f.getDueDate(), s.getDueDate())).get();
+			double vMinDistance = calculateDistance(first, vMinDueDate, totalDistance);
+			
+			/*
+			ArrayList<Vertice> secondTestPath = new ArrayList<Vertice>(testPath);
+			
+			Vertice vDistance = getClosestVerticeWithinTimeWindow(first, testPath, distMatrix);
+			double vNewDistance = calculateDistance(first, vDistance, totalDistance, distMatrix);
+
+			//new test
+			
+			while(vMinDistance > vNewDistance) {
+				secondTestPath.remove(vMinDueDate);
+				vMinDueDate = secondTestPath.stream().min((f, s) -> Double.compare(f.getDueDate(), s.getDueDate())).get();
+				vMinDistance = calculateDistance(first, vMinDueDate, totalDistance, distMatrix);
+			}*/
+			
+			ArrayList<Edge> maxDistanceEdges = new ArrayList<Edge>();
+
+			
+			int index = 1;
+			for(Vertice second: testPath) {
+				double distance = calculateDistance(first, second, totalDistance);
+				Edge e = new Edge(index, first, second, distance);
+				index++;
+				maxDistanceEdges.add(e);
+			}
+			
+			
+			while(!maxDistanceEdges.isEmpty()) {
+				
+				
+				if(vMinDistance > vMinDueDate.getDueDate()) {
+					//remove latest vertice and subtract total distance, add vmin DueDate
+					//this solution ignores wainting times(so far)
+					
+					double problemInterval = vMinDistance - vMinDueDate.getDueDate();
+					Double distance;
+					
+					problemInterval = vMinDueDate.getDueDate() - problemInterval;
+					int i = 1;
+					
+					Vertice second = solutionPath.get(solutionPath.size()-i);
+					
+					
+					//234 <  236
+					while(second.getDueDate() > problemInterval){
+						first = second;
+						i++;
+						second = solutionPath.get(solutionPath.size()-i);
+					}
+					
+					i++;
+					first = solutionPath.get(solutionPath.size()-i);
+					
+					int j = 1;
+					while(j < i){
+						Vertice retrace = solutionPath.get(solutionPath.size()-1);
+						Vertice retraceTwoSteps = solutionPath.get(solutionPath.size()-2);
+						
+						distance = calculateDistance(retraceTwoSteps, retrace, 0);
+						
+						totalDistance = totalDistance - distance;
+						
+						solutionPath.remove(retrace);
+						testPath.add(retrace);
+						j++;
+					}
+					
+					totalDistance = calculateDistance(first, vMinDueDate, totalDistance);
+					solutionPath.add(vMinDueDate);
+					testPath.remove(vMinDueDate);
+					first = vMinDueDate;
+					
+					/*
+					first = solutionPath.get(solutionPath.size()-2);
+					Vertice second = solutionPath.get(solutionPath.size()-1);
+					Double distance = calculateDistance(first, second, 0, distMatrix);
+					
+					totalDistance = totalDistance - distance;
+					solutionPath.remove(second);
+					testPath.add(second);
+					
+					totalDistance = calculateDistance(first, vMinDueDate, totalDistance, distMatrix);
+					solutionPath.add(vMinDueDate);
+					testPath.remove(vMinDueDate);
+					first = vMinDueDate;
+					*/
+					
+					System.out.println("Problem");
+					break;
+				}
+				
+				/*
+				while(vMinDistance > vMinDueDate.getDueDate()) {
+										
+					if(secondTestPath.isEmpty()) {
+						System.out.println("Terrible Error");
+						return null;
+					}
+					
+					secondTestPath.remove(vMinDueDate);
+					
+					if(!secondTestPath.isEmpty()) {
+						if(secondTestPath.size() != 1) {
+							vMinDueDate = secondTestPath.stream().max((f, s) -> Double.compare(f.getDueDate(), s.getDueDate())).get();
+						}
+						else
+							vMinDueDate = secondTestPath.get(0);
+						
+						if(vMinDueDate.getVerticeId() == 28) {
+							System.out.println("Problem");
+						}
+						
+						vMinDistance = calculateDistance(first, vMinDueDate, totalDistance, distMatrix);
+						
+					}
+					System.out.println("HATE");
+				}
+				*/
+				Edge e = maxDistanceEdges.stream().min((f, s) -> Double.compare(f.getTravelTime(), s.getTravelTime())).get();
+				
+				if(e.getTravelTime() > e.getDestiny().getDueDate()){
+					System.out.println("Problem");
+				}
+				
+				
+				if(e.getTravelTime() <= vMinDueDate.getDueDate()) {
+					
+					if(e.getTravelTime() + vMinDistance > vMinDueDate.getDueDate()) {
+						totalDistance = calculateDistance(first, vMinDueDate, totalDistance);
+						solutionPath.add(vMinDueDate);
+						testPath.remove(vMinDueDate);
+						first = vMinDueDate;
+						break;
+					}
+					
+
+					Vertice vMaxDistance = e.getDestiny();
+					
+					
+					totalDistance = calculateDistance(first, vMaxDistance, totalDistance);
+					solutionPath.add(vMaxDistance);
+					testPath.remove(vMaxDistance);
+					first = vMaxDistance;
+					break;
+				}
+				else {
+					
+					maxDistanceEdges.remove(e);
+					//System.out.println("Size of neighbor Edges available: " + maxDistanceEdges.size());
+				}	
+			}
+			
+		}
+		totalDistance = calculateDistance(first, origin, totalDistance);
+		System.out.println("Time travelled: " + totalDistance);
+		solutionPath.add(origin);
+		return solutionPath;
+		
+
+	}
+	
+	public static double calculateDistance(Vertice origin, Vertice candidadeVertice, double candidateTimeTravel) {
+		double distance = candidateTimeTravel + Main.distMatrix[origin.getVerticeId()][candidadeVertice.getVerticeId()];
+		//adicionar tempo de espera à solução se necessário
+		if(candidadeVertice.getReadyTime() >  distance){
+			distance = distance + (candidadeVertice.getReadyTime() - distance);
+		}
+		return distance;
+	}
+	
+	public static double calculateTotalDistance(ArrayList<Vertice> currentPath,double[][] distMatrix) {
+		
+		ArrayList<Vertice> tempPath = new ArrayList<Vertice>(currentPath);
+		
+		Vertice origin = tempPath.get(0);
+		tempPath.remove(0);
+		double distance = 0;
+		
+		for(Vertice destiny : currentPath){
+			distance = calculateDistance(origin, destiny, distance);
+			origin = destiny;
+		}
+
+		return distance;
+	}
+	
+	public static ArrayList<Vertice> neighbor(ArrayList<Vertice> currentPath, Random rNeighbor1, Random rNeighbor2, ArrayList<Graph> testedPaths) {
 		
 		//trocar 2 vertices do caminho original
-		
 		
 		ArrayList<Vertice> neighborPath =  new ArrayList<>();
 		neighborPath.addAll(currentPath); //must confirm if changing this list will not change the solutionVertices list(does this even matter?)
 		
-		Random randomGenerator1 = new Random();
-		Random randomGenerator2 = new Random();
+		boolean isNewPath = false;
 		
-		//-1 para nao trocar o ultimo vertice do caminho(sempre sera o mesmo que o primeiro)
-		int index1 = randomGenerator1.nextInt(neighborPath.size()-1);
-		int index2 = randomGenerator2.nextInt(neighborPath.size()-1);
-		
-        Collections.swap(neighborPath, index1, index2);
-       
-        //se o primeiro vertice trocou, trocar o ultimo tambem
-        if(neighborPath.get(0) != neighborPath.get(neighborPath.size())){
-        	
-        	Vertice lastVertice = neighborPath.get(neighborPath.size());
-        	neighborPath.remove(lastVertice);
-        	Vertice firstVertice = neighborPath.get(0);
-        	neighborPath.add(firstVertice);
-
-        }
-        
-        System.out.println("Neighbor path, might not be a valid solution:");
-		for(Vertice vertice : neighborPath){
-			System.out.println(vertice.getVerticeId() + "_" + vertice.getxCoord() + "_" +  vertice.getyCoord() + "_" + 
-					vertice.getReadyTime() + "_" +  vertice.getDueDate());
-
+		while(!isNewPath) {
+			//-1 para nao trocar o ultimo vertice do caminho(sempre sera o mesmo que o primeiro)
+			int index1 = rNeighbor1.nextInt(neighborPath.size()-2);
+			int index2 = rNeighbor2.nextInt(neighborPath.size()-2);
+			
+			int neighbors = Math.abs(index1-index2);
+			
+			while((index1 == 0 && index2 == 0) || neighbors == 1 ) {
+				index1 = rNeighbor1.nextInt(neighborPath.size()-2);
+				index2 = rNeighbor2.nextInt(neighborPath.size()-2);
+			}
+			
+			
+			Collections.swap(neighborPath, index1, index2);
+			 
+			if(!testedPaths.isEmpty()) {
+				for(Graph g : testedPaths) {
+					if(neighborPath == g.getVertices()) {
+						isNewPath = false;
+						break;
+					}
+					else {
+						if(testedPaths.indexOf(g) == testedPaths.size() -1) {
+							isNewPath = true;
+						}
+					}
+				}
+			}
+			else
+				isNewPath = true;
+			 
 		}
+		
+
+        
+        
+        Graph g = new Graph(neighborPath, null);
+		//System.out.println("New neighbor to add to the list:");
+		//printPath(neighborPath);
+        testedPaths.add(g);
+       
+        if(Main.debug)System.out.println("first element:" + neighborPath.get(0).getVerticeId());
+        if(Main.debug)System.out.println("last element:" + neighborPath.get(neighborPath.size()-1).getVerticeId());
+        
 		
 		return neighborPath;
 		
 	}
+
 	
-	public double solution(ArrayList<Vertice> path) {
+	public static double isValidSolution(ArrayList<Vertice> path) {
 		//a partir de um grafo procurar uma soluçao possivel para o problema:
 		//retorna a soma dos tempos se achou uma solução viável ou -1 se não há como formar um ciclo a partir do caminho informado
 		//ArrayList<Vertice> minTimeTravelVertices =  new ArrayList<Vertice>();
@@ -96,25 +470,21 @@ public class SimulatedAnnealing {
 		
 		Vertice v1 = path.get(index);
 		//adicionar tempo de espera à solução se necessário(intervalo do primeiro vertice não começa em zero)
-		if(v1.getReadyTime() >  minTimeTravel){
-			minTimeTravel = minTimeTravel + (v1.getReadyTime() - minTimeTravel);
-		}
+		//if(v1.getReadyTime() >  minTimeTravel){
+		//	minTimeTravel = minTimeTravel + v1.getReadyTime();
+		//}
 		
 		if(v1.getDueDate() >= minTimeTravel){
 			index++;
-			while(index <= path.size()){
+			while(index < path.size()){
 				Vertice v2 = path.get(index);
 				
-				minTimeTravel = minTimeTravel + getTravelTime(v1.getxCoord(), v2.getxCoord(), v1.getyCoord(), v2.getyCoord());
-					
-				//adicionar tempo de espera à solução se necessário
-				if(v2.getReadyTime() >  minTimeTravel){
-					minTimeTravel = minTimeTravel + (v2.getReadyTime() - minTimeTravel);
-				}
+				minTimeTravel = calculateDistance(v1, v2, minTimeTravel);
 				
 				//tempo está fora da janela de tempo do proximo vertice
 				if(v2.getDueDate() < minTimeTravel){
-			        System.out.println("Invalid path");
+					if(Main.debug)System.err.println("Invalid path, time passed:" + minTimeTravel);
+					if(Main.debug)System.err.println("Stopped on vertice: v" + v2.getVerticeId());
 			        return -1;
 				}
 
@@ -123,16 +493,141 @@ public class SimulatedAnnealing {
 			}
 		}
 		else{
-	        System.out.println("Invalid path");
+			if(Main.debug)System.err.println("Invalid path, not even entered loop, time passed:" + minTimeTravel);
 	        return -1;
 		}
 		
+		System.out.println("Valid path found:" + minTimeTravel);
+		sucessRate++;
 		return minTimeTravel;
 		
 	}
-	public double getTravelTime(int xa, int xb, int ya, int yb) {
+
+	
+	public static Vertice getClosestVerticeWithinTimeWindow(Vertice v1, ArrayList<Vertice> path,double[][] distMatrix) {
+		ArrayList<Edge> validEdges =  new ArrayList<>();
+		
+		double distance = 0;
+		//double range = 0;
+		
+		for(Vertice v2 : path) {
+			if(v2 != v1 && v2 != path.get(path.size()-1)) {
+				distance =  distMatrix[v1.getVerticeId()][v2.getVerticeId()];
+				//range = v1.getReadyTime() + distance;
+				
+				//if(range > v2.getReadyTime() && range < v2.getDueDate()) {
+					 Edge e = new Edge(v1.getVerticeId(), v1, v2, distance);
+					 validEdges.add(e);
+				//}
+			}
+		}
+		
+		if(!validEdges.isEmpty()) {
+			Edge e = validEdges.stream().min((first, second) -> Double.compare(first.getTravelTime(), second.getTravelTime())).get();
+			Vertice v = e.getDestiny();
+			return v;
+		}
+		
+		System.out.println("Unknown error");
+		return null;
+	}
+	
+	
+	
+	public static double getTravelTime(int xa, int xb, int ya, int yb) {
 		int xt = xa - xb;
 		int yt = ya - yb;
 		return Math.floor(Math.sqrt(xt*xt + yt*yt));
+	}
+	
+	public static void printPath(ArrayList<Vertice> path) {
+		for(Vertice v : path){
+			System.out.print(" v" + v.getVerticeId());
+		}
+		System.out.println("");
+	}
+	
+	public static ArrayList<Vertice> sortByDueDate(ArrayList<Vertice> path) {
+		Collections.sort(path, new Comparator<Vertice>() {
+			@Override
+			public int compare(Vertice o1, Vertice o2) {
+				return o1.getDueDate() - o2.getDueDate();
+			}
+		});
+        //se o primeiro vertice trocou, trocar o ultimo tambem
+        if(path.get(0).getVerticeId() != path.get(path.size()-1).getVerticeId()){
+        	
+        	Vertice lastVertice = path.get(path.size()-1);
+        	path.remove(lastVertice);
+        	Vertice firstVertice = path.get(0);
+        	path.add(firstVertice);
+
+        }
+        ArrayList<Vertice> newPath =  new ArrayList<>();
+        newPath.add(path.get(path.size()-2));
+      
+        for(Vertice v: path) {
+        	newPath.add(v);
+        }
+        
+        newPath.remove(newPath.size()-1);
+        
+        return newPath;
+	}
+	
+	public static ArrayList<Vertice> sortByReadyTime(ArrayList<Vertice> path) {
+		Vertice origin = path.get(0);
+		
+		ArrayList<Vertice> oldPath =  new ArrayList<>();
+		oldPath.addAll(path);
+		oldPath.remove(origin);
+		oldPath.remove(path.get(path.size()-1));
+		
+		Collections.sort(oldPath, new Comparator<Vertice>() {
+			@Override
+			public int compare(Vertice o1, Vertice o2) {
+				return o1.getReadyTime() - o2.getReadyTime();
+			}
+		});
+
+        ArrayList<Vertice> newPath =  new ArrayList<>();
+        newPath.add(origin);
+        newPath.addAll(oldPath);
+        newPath.add(origin);
+        
+        return newPath;
+	}
+	
+	public static ArrayList<Vertice> sortByDistance(ArrayList<Vertice> path, double[][] distMatrix) {
+		ArrayList<Integer> verticesToVisit = new ArrayList<>();
+		
+		for(Vertice v : path) {
+			verticesToVisit.add(v.getVerticeId());
+		}
+		
+		ArrayList<Vertice> newPath =  new ArrayList<Vertice>();
+		
+		ArrayList<Vertice> oldPath =  new ArrayList<Vertice>();
+		oldPath.addAll(path);
+		
+		newPath.add(path.get(0));
+		Vertice va = path.get(0);
+		
+		verticesToVisit.remove(0);
+		verticesToVisit.remove(verticesToVisit.size() -1);
+		
+		while(!verticesToVisit.isEmpty()) {
+			Vertice vb = getClosestVerticeWithinTimeWindow(va,oldPath,distMatrix);
+			newPath.add(vb);
+			verticesToVisit.remove((Integer)vb.getVerticeId());
+			oldPath.remove(va);
+			va = vb;
+			
+
+		}
+		
+		newPath.add(path.get(0));
+		
+		return newPath;
 	}
 }

@@ -5,18 +5,23 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 public class Main {
+	
+	public static boolean debug = true;
+	public static long startTime;
+	public static double[][] distMatrix;
 
 	public static void main(String[] args) throws FileNotFoundException {
 		
-		long startTime = System.currentTimeMillis();
+		startTime = System.currentTimeMillis();
 			
-		System.out.println(System.getProperty("user.dir"));
+		if(debug)System.out.println(System.getProperty("user.dir"));
 		
 		File file = null;
 		float temperature = 0;
 		float r = 0;
 		int stop1 = 0;
 		int stop2 = 0;
+		long seed = 0;
 		
 		if (0 < args.length) {
 			file = new File(args[0]);
@@ -24,7 +29,8 @@ public class Main {
 			r = Float.parseFloat(args[2]); 
 			stop1 = Integer.parseInt(args[3]);
 			stop2 = Integer.parseInt(args[4]);
-			// file path, t,r,stop1 e stop2 digitadas pelo user
+			seed = Integer.parseInt(args[5]);
+			// file path, t,r,stop1,stop2 e seed digitadas pelo user
 		} else {
 			System.err.println("Invalid arguments count:" + args.length);
 			System.exit(0);
@@ -40,51 +46,73 @@ public class Main {
 			System.exit(0);
 		}
 	
+	
 		ArrayList<Vertice> vertices = ReadFile.readFile(file);
-		//ArrayList<Edge> edges =  new ArrayList<Edge>();
+		
+		distMatrix = new double[vertices.size()][vertices.size()];
+		
+		for(Vertice v1 : vertices) {
+			System.out.println("Line:" + v1.getVerticeId());
+			for(Vertice v2 : vertices) {
+				if(v1 == v2) {
+					distMatrix[v1.getVerticeId()][v2.getVerticeId()] = 0;
+				}
+				else
+					distMatrix[v1.getVerticeId()][v2.getVerticeId()] = SimulatedAnnealing.getTravelTime(v1.getxCoord(), v2.getxCoord(), v1.getyCoord(), v2.getyCoord());
+				System.out.print(" " + distMatrix[v1.getVerticeId()][v2.getVerticeId()]);
+			}
+			System.out.println("");
+		}
+
+		
+		System.out.println("Corrected matrix:");
 		
 		
-		//System.out.println(new Random().nextFloat());
+		triangleInequality(vertices, distMatrix);
 		
-		//Graph graph = new Graph(vertices,edges);
+		for(Vertice v1 : vertices) {
+			System.out.println("Line:" + v1.getVerticeId());
+			for(Vertice v2 : vertices) {
+				System.out.print(" | " + distMatrix[v1.getVerticeId()][v2.getVerticeId()]);
+			}
+			System.out.println("");
+		}
+
+		vertices = SimulatedAnnealing.simulatedAnnealing(vertices,temperature,r,stop1,stop2, seed);
 		
-		System.out.println("T:" + temperature);
-		System.out.println("r:" + r);
-		System.out.println("stop1:" + stop1);
-		System.out.println("stop2:" + stop2);
 		
-		Vertice v1 = vertices.get(0);
-		Vertice v2 = vertices.get(1);
+		if(debug)System.out.println("T:" + temperature);
+		if(debug)System.out.println("r:" + r);
+		if(debug)System.out.println("stop1:" + stop1);
+		if(debug)System.out.println("stop2:" + stop2);
+		if(debug)System.out.println("seed:" + seed);
 		
-		double distanceTest = getTravelTime(v1.getxCoord(), v2.getxCoord(), v1.getyCoord(), v2.getyCoord());
-		System.out.println("distancia entre 2 primeiros vertices:" + distanceTest);
+		ArrayList<Vertice> vertices2 = new ArrayList<Vertice>(vertices);
+		Vertice v1 = vertices2.get(0);
+		Vertice v2 = vertices2.get(1);
+		
+		double distanceTest = SimulatedAnnealing.getTravelTime(v1.getxCoord(), v2.getxCoord(), v1.getyCoord(), v2.getyCoord());
+		if(debug)System.out.println("distancia entre 2 primeiros vertices:" + distanceTest);
 		
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
 		System.out.println("tempo de execução:" + totalTime + " milisegundos");
+		System.exit(0);
 	}
 	
-	/*
-	public void processEdgeTravelTime(ArrayList<Vertice> vertices, ArrayList<Edge> edges) {
-		
-		for(Edge e : edges) {
-			
-			for(Vertice i : vertices) {
-
-				for(Vertice j : vertices) {
-					
-					for(Vertice k : vertices) {
-					
-					}
+	
+	public static void triangleInequality(ArrayList<Vertice> vertices, double[][] distMatrix) {
+	
+		for(Vertice i : vertices) {
+			for(Vertice j : vertices) {
+				for(Vertice k : vertices) {
+					if(distMatrix[i.getVerticeId()][j.getVerticeId()] > distMatrix[i.getVerticeId()][k.getVerticeId()] + distMatrix[k.getVerticeId()][j.getVerticeId()]) 
+						distMatrix[i.getVerticeId()][j.getVerticeId()] = distMatrix[i.getVerticeId()][k.getVerticeId()] + distMatrix[k.getVerticeId()][j.getVerticeId()];
 				}
 			}
+		}
 			
-		}	
-	}*/
-	public static double getTravelTime(int xa, int xb, int ya, int yb) {
-		int xt = xa - xb;
-		int yt = ya - yb;
-		return Math.floor(Math.sqrt(xt*xt + yt*yt));
+	
 	}
 
 }

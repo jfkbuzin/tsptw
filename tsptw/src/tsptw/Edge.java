@@ -8,13 +8,22 @@ public class Edge {
 	public Vertice destiny;
 	//public int travelDistance;
 	public double travelTime;
+	public boolean violation;
 	
-	public Edge(int edgeId, Vertice source, Vertice destiny, int travelTime) {
+	public boolean isViolation() {
+		return violation;
+	}
+
+	public Edge(int edgeId, Vertice source, Vertice destiny, double travelTime) {
 		this.edgeId = edgeId;
 		this.source = source;
 		this.destiny = destiny;
 		//this.travelDistance = travelDistance;
 		this.travelTime = travelTime;
+	}
+	
+	public void setViolation(boolean violation) {
+		this.violation = violation;
 	}
 
 	public int getEdgeId() {
@@ -57,12 +66,5 @@ public class Edge {
 	public void setTravelTime(double travelTime) {
 		this.travelTime = travelTime;
 	}
-
-	public void setTravelTime(int xa, int xb, int ya, int yb) {
-		int xt = xa - xb;
-		int yt = ya - yb;
-		this.travelTime = Math.floor(Math.sqrt(xt*xt + yt*yt));
-	}
-	
 	
 }
