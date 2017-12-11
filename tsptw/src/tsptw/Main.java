@@ -3,6 +3,7 @@ package tsptw;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Main {
 	
@@ -67,6 +68,7 @@ public class Main {
 		
 		System.out.println("Corrected matrix:");
 		
+		//vertices = SimulatedAnnealing.simulatedAnnealing(vertices,temperature,r,stop1,stop2, seed);
 		
 		triangleInequality(vertices, distMatrix);
 		
