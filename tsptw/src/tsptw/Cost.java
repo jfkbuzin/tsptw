@@ -2,18 +2,15 @@ package tsptw;
 
 public class Cost {
 
-	//TODO: remove this unused class if it is not necessary
 	public Vertice unvisited;
 	public Vertice source;
 	public Vertice destiny;
-	//public int travelDistance;
 	public double c1;
 
 	public Cost(Vertice unvisited, Vertice source, Vertice destiny, double c1) {
 		this.unvisited = unvisited;
 		this.source = source;
 		this.destiny = destiny;
-		//this.travelDistance = travelDistance;
 		this.c1 = c1;
 	}
 
