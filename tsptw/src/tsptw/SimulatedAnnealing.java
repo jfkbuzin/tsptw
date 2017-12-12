@@ -47,6 +47,9 @@ public class SimulatedAnnealing {
 		
 		double currentSolution = isValidSolution(currentPath);
 		
+		if(currentSolution != -1)
+			sucessRate++;
+		
 		
 		while(currentSolution == -1) {
 			
@@ -73,13 +76,14 @@ public class SimulatedAnnealing {
 			
 		}
 		
-		ArrayList<Vertice> firstSolutionPath = currentPath;
+		if(currentSolution != -1)
+			sucessRate++;
 		
 		while(stop2 > 0) {
 			while(stop1 > 0) {
 				
 				
-				if(sucessRate == 100){
+				if(sucessRate == 1000){
 					System.out.println("Minimum time to travel all vertices found: " + currentSolution);
 					System.out.println("Seed used: " + seed);
 					System.out.println("Sucess rate: " + sucessRate);
@@ -92,6 +96,9 @@ public class SimulatedAnnealing {
 				ArrayList<Vertice> candidatePath = opt3(currentPath, rNeighbor1, rNeighbor2, rNeighbor3);
 
 				double candidateSolution = isValidSolution(candidatePath);
+				
+				if(currentSolution != -1)
+					sucessRate++;
 				
 				if(Main.debug)System.out.println("Original Neighbor Path:");
 				if(Main.debug)printPath(candidatePath);
@@ -241,12 +248,6 @@ public class SimulatedAnnealing {
 		return alpha1*(diu + duj - dij) + alpha2*(bju - bj); //0,6 e 0,4
 	}
 	
-	
-	
-	public static double c2(double dou,double c1){
-		return dou - c1;
-	}
-	
 
 	public static double calculateDistance(Vertice origin, Vertice candidadeVertice, double candidateTimeTravel) {
 		double distance = candidateTimeTravel + Main.distMatrix[origin.getVerticeId()][candidadeVertice.getVerticeId()];
@@ -305,9 +306,11 @@ public class SimulatedAnnealing {
 			int index3 = rNeighbor2.nextInt(edges.size()-1);
 			
 			while(Math.abs(index1 - index2) ==1 || Math.abs(index1 - index3) ==1 || Math.abs(index2 - index3) ==1 
-					|| index1 == index2 || index2 == index3 || index1 == index3 || index1 == 0
+					|| index1 == index2 || index2 == index3 || index1 == index3 
+					|| index1 == 0
 					|| index2 == 0
 					|| index3 == 0){
+				
 				
 				index1 = rNeighbor1.nextInt(edges.size()-1);
 				index2 = rNeighbor2.nextInt(edges.size()-1);
@@ -334,7 +337,10 @@ public class SimulatedAnnealing {
 			
 			
 			for(int i : indexes){
-				index = connectRoute(edges, edges.get(i-1),index);
+				if(i != 0)
+					index = connectRoute(edges, edges.get(i-1),index);
+				//else
+					//index = connectRoute(edges, edges.get(edges.size()-1),index);
 			}
 			
 			
@@ -498,7 +504,6 @@ public class SimulatedAnnealing {
 		}
 		
 		if(Main.debug)System.out.println("Valid path found:" + minTimeTravel);
-		sucessRate++;
 		return minTimeTravel;
 		
 	}
