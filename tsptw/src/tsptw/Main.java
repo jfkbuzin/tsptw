@@ -2,6 +2,7 @@ package tsptw;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -11,7 +12,7 @@ public class Main {
 	public static long startTime;
 	public static double[][] distMatrix;
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws FileNotFoundException, ParseException {
 		
 		startTime = System.currentTimeMillis();
 			

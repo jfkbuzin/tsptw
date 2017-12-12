@@ -1,5 +1,7 @@
 package tsptw;
 
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,7 +14,7 @@ public class SimulatedAnnealing {
 	public static double alpha1 = 0.6;
 	public static double alpha2 = 0.4;
 
-	public static ArrayList<Vertice> simulatedAnnealing(ArrayList<Vertice> initialPath, float t, float r, int stop1, int stop2, long seed) {
+	public static ArrayList<Vertice> simulatedAnnealing(ArrayList<Vertice> initialPath, float t, float r, int stop1, int stop2, long seed) throws ParseException {
 		
 		ArrayList<Graph> testedPaths =  new ArrayList<>();
 		
@@ -34,7 +36,7 @@ public class SimulatedAnnealing {
 		
 		System.out.println("Original Path:");
 		printPath(currentPath);
-		
+
 		currentPath = insertionHeuristic(currentPath);
 		//currentPath = findPossibleSolution(currentPath, Main.distMatrix);
 		
@@ -43,10 +45,30 @@ public class SimulatedAnnealing {
 		
 		double currentSolution = isValidSolution(currentPath);
 		
-		
-		if(currentSolution == -1) {
-			System.out.println("Must find the first solution no matter what:");
-			return null;
+		while(currentSolution == -1) {
+			
+			alpha2 = randomSimulated.nextDouble();
+			DecimalFormat df = new DecimalFormat("#.00");    
+			String formate = df.format(alpha2); 
+			alpha2 = (Double)df.parse(formate);
+			
+			alpha1 = 1 - alpha2;
+			System.out.println("Alpha1: " + alpha1);
+			System.out.println("Alpha2: " + alpha2);
+			
+			currentPath = sortByDueDate(currentPath);
+			
+			System.out.println("Original Path:");
+			printPath(currentPath);
+
+			currentPath = insertionHeuristic(currentPath);
+			//currentPath = findPossibleSolution(currentPath, Main.distMatrix);
+			
+			System.out.println("Possible Solution Path:");
+			printPath(currentPath);
+			
+			currentSolution = isValidSolution(currentPath);
+			
 		}
 		
 		ArrayList<Vertice> firstSolutionPath = currentPath;
@@ -79,7 +101,7 @@ public class SimulatedAnnealing {
 				}
 				else {
 					double delta = candidateSolution - currentSolution;
-					if(Math.exp(-delta/t) > randomSimulated.nextFloat()) {
+					if(Math.exp(-delta/t) > randomSimulated.nextDouble()) {
 						currentPath = candidatePath;
 						currentSolution = candidateSolution;
 					}
@@ -190,7 +212,20 @@ public class SimulatedAnnealing {
 				}
 			}
 			
-			Cost c = validPlacesToInsertVertice.stream().min((f, s) -> Double.compare(f.getC1(), s.getC1())).get();
+			if(validPlacesToInsertVertice.isEmpty()) {
+				System.out.println("Invalid alphas ");
+				return currentPath;
+
+			}
+			
+			Cost c;
+			if(validPlacesToInsertVertice.size() > 1) {
+				c = validPlacesToInsertVertice.stream().min((f, s) -> Double.compare(f.getC1(), s.getC1())).get();
+			}else
+				c = validPlacesToInsertVertice.get(0);
+			
+
+			
 			Vertice placeToPut = c.getDestiny();
 			solutionPath.add(solutionPath.indexOf(placeToPut), c.getUnvisited());
 			testPath.remove(c.getUnvisited());
