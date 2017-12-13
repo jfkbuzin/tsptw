@@ -25,13 +25,6 @@ public class SimulatedAnnealing {
 		Random rNeighbor2 = new Random(seed*3);
 		Random rNeighbor3 = new Random(seed*9);
 		Random randomSimulated = new Random(seed*3);
-		//System.out.println("r1: " + rNeighbor1.nextInt(vertices.size()-1));
-		//System.out.println("r2: " + rNeighbor1.nextInt(vertices.size()-1));
-		//System.out.println("r3: " + randomSimulated.nextFloat());
-		
-		//System.out.println("r1a: " + rNeighbor1.nextInt(vertices.size()-1));
-		//System.out.println("r2a: " + rNeighbor1.nextInt(vertices.size()-1));
-		//System.out.println("r3a: " + randomSimulated.nextFloat());
 		
 		ArrayList<Vertice> currentPath = initialPath;
 		
@@ -52,11 +45,12 @@ public class SimulatedAnnealing {
 		
 		
 		while(currentSolution == -1) {
-			
+
 			alpha2 = randomSimulated.nextDouble();
+
 			DecimalFormat df = new DecimalFormat("#.00");    
 			String formate = df.format(alpha2); 
-			alpha2 = (Double)df.parse(formate);
+			alpha2 = df.parse(formate).doubleValue();
 			
 			alpha1 = 1 - alpha2;
 			if(Main.debug)System.out.println("Alpha1: " + alpha1);
@@ -83,16 +77,6 @@ public class SimulatedAnnealing {
 			while(stop1 > 0) {
 				
 				
-				if(sucessRate == 1000){
-					System.out.println("Minimum time to travel all vertices found: " + currentSolution);
-					System.out.println("Seed used: " + seed);
-					System.out.println("Sucess rate: " + sucessRate);
-					System.out.println("Final Path:");
-					printPath(currentPath);
-					return currentPath;
-				}
-				
-				
 				ArrayList<Vertice> candidatePath = opt3(currentPath, rNeighbor1, rNeighbor2, rNeighbor3);
 
 				double candidateSolution = isValidSolution(candidatePath);
@@ -103,18 +87,6 @@ public class SimulatedAnnealing {
 				if(Main.debug)System.out.println("Original Neighbor Path:");
 				if(Main.debug)printPath(candidatePath);
 				
-				/*
-				int s = 0;
-				while(candidateSolution == -1 && s < 5) {
-					candidatePath = neighbor(currentPath, rNeighbor1, rNeighbor2);
-					//test 3-opt
-					candidateSolution = isValidSolution(candidatePath);
-					s++;
-				}
-				
-				if(candidateSolution == -1){
-					candidateSolution = currentSolution;
-				}*/
 				
 				if(candidateSolution <= currentSolution) {
 					currentPath = candidatePath;
@@ -126,14 +98,7 @@ public class SimulatedAnnealing {
 						currentPath = candidatePath;
 						currentSolution = candidateSolution;
 					}
-					
-					/*
-					//we have to go back
-					if(candidateSolution == 8000){
-						candidatePath = firstSolutionPath;
-						candidateSolution = currentSolution;
-					}*/
-					
+										
 				}
 				
 				stop1--;
@@ -142,11 +107,6 @@ public class SimulatedAnnealing {
 			
 			stop2--;
 		}
-		
-		//System.out.println("All neighbors:");
-		//for(Graph g : testedPaths) {
-		//	printPath(g.getVertices());
-		//}
 		
 		System.out.println("Minimum time to travel all vertices found: " + currentSolution);
 		System.out.println("Seed used: " + seed);
@@ -218,7 +178,7 @@ public class SimulatedAnnealing {
 			}
 			
 			if(validPlacesToInsertVertice.isEmpty()) {
-				System.out.println("Invalid alphas ");
+				if(Main.debug)System.out.println("Invalid alphas ");
 				return currentPath;
 
 			}
@@ -360,8 +320,8 @@ public class SimulatedAnnealing {
 				}
 			}
 
-			System.out.println("New neighbor to add to the list:");
-			printPath(returnPath);
+			if(Main.debug)System.out.println("New neighbor to add to the list:");
+			if(Main.debug)printPath(returnPath);
 			
 			solution = isValidSolution(returnPath);
 			
@@ -461,8 +421,8 @@ public class SimulatedAnnealing {
 		returnPath.addAll(neighborPath);
 		returnPath.add(currentPath.get(0));
         
-		System.out.println("New neighbor to add to the list:");
-		printPath(returnPath);
+		if(Main.debug)System.out.println("New neighbor to add to the list:");
+		if(Main.debug)printPath(returnPath);
         
 		
 		return returnPath;

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class Main {
 	
-	public static boolean debug = true;
+	public static boolean debug = false;
 	public static long startTime;
 	public static double[][] distMatrix;
 
@@ -53,7 +53,7 @@ public class Main {
 		distMatrix = new double[vertices.size()][vertices.size()];
 		
 		for(Vertice v1 : vertices) {
-			System.out.println("Line:" + v1.getVerticeId());
+			if(debug)System.out.println("Line:" + v1.getVerticeId());
 			for(Vertice v2 : vertices) {
 				if(v1 == v2) {
 					distMatrix[v1.getVerticeId()][v2.getVerticeId()] = 0;
@@ -73,7 +73,7 @@ public class Main {
 		triangleInequality(vertices, distMatrix);
 		
 		for(Vertice v1 : vertices) {
-			System.out.println("Line:" + v1.getVerticeId());
+			if(debug)System.out.println("Line:" + v1.getVerticeId());
 			for(Vertice v2 : vertices) {
 				if(debug)System.out.print(" | " + distMatrix[v1.getVerticeId()][v2.getVerticeId()]);
 			}
@@ -82,11 +82,11 @@ public class Main {
 
 		vertices = SimulatedAnnealing.simulatedAnnealing(vertices,temperature,r,stop1,stop2, seed);
 		
-		if(debug)System.out.println("T:" + temperature);
-		if(debug)System.out.println("r:" + r);
-		if(debug)System.out.println("stop1:" + stop1);
-		if(debug)System.out.println("stop2:" + stop2);
-		if(debug)System.out.println("seed:" + seed);
+		System.out.println("T:" + temperature);
+		System.out.println("r:" + r);
+		System.out.println("stop1:" + stop1);
+		System.out.println("stop2:" + stop2);
+		System.out.println("seed:" + seed);
 		
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
